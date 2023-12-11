@@ -1,0 +1,31 @@
+//Displays a popup of Ownership acres by clicking on fire Perimeter
+
+
+var FirePeri = Intersects($feature, FeatureSetByName($map, "Jurisdictional Unit"));
+var TotalPeri = AreaGeodetic($feature, "acres");
+var cnt = Count(FirePeri);
+//var result = "Total Acres: " + Text(Round(TotalPeri,1), "###,###.#");
+var result = "Acreage by Jurisdiction: ";
+var fct = {};
+var priv = 0;
+if (cnt > 0) {
+    for (var Owner in FirePeri) {
+        var intersectarea = AreaGeodetic(Intersection($feature, Owner), "acres");
+        var category = Text(Owner.LandownerCategory);
+        if (HasKey(fct, category)) {
+            fct[category] += intersectarea;
+        } else {
+            fct[category] = intersectarea;
+        }
+    }
+    for (var category in fct) {
+        var overlaparea = fct[category];
+        var decodedValue = Decode(category, 'BLM','BLM','DOD', 'DoD', 'BIA','BIA, Tribal','USFWS','USFWS', 'NPS','NPS','BOR','BoR','USFS','USFS','State','State','City, County, Other','City, County, Other', 'ANCSA,Private', 'ANCSA,Private','Private', 'Private', 'Error');
+        result += TextFormatting.NewLine  + decodedValue + "  (" + Text(overlaparea, "###,###.#") + " acres)";
+        priv += overlaparea;
+    }
+      result += iif(totalperi-priv>1,TextFormatting.NewLine + "Private/Unknown "+"  ("+Text(TotalPeri-priv, "###,###.#") + " acres)","");
+} else {
+    result = "Private/Unk: "+ Round(TotalPeri,1)+ " acres)";
+}
+return result;
